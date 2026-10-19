@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="vi" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniShare - Quản Lý, Cho Thuê & Bán Đồ Dùng Sinh Viên</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        pastel: {
+                            purple: '#e8dff5',
+                            pink: '#fce1e4',
+                            yellow: '#fcf4dd',
+                            green: '#ddedf4',
+                            blue: '#daeaf6',
+                            accent: '#a78bfa',
+                            primary: '#8b5cf6',
+                            darkBg: '#0f172a',
+                            darkCard: '#1e293b'
+                        }
+                    },
+                    borderRadius: {
+                        '4xl': '2rem',
+                        '5xl': '2.5rem'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter & Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Gradient backgrounds inspired by reference image */
+        .bg-pastel-gradient {
+            background: linear-gradient(135deg, #fce1e4 0%, #e8dff5 50%, #daeaf6 100%);
+        }
+
+        .dark .bg-pastel-gradient {
+            background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 50%, #172554 100%);
+        }
+
+        .banner-gradient {
+            background: linear-gradient(135deg, rgba(232, 223, 245, 0.8) 0%, rgba(252, 225, 228, 0.8) 50%, rgba(218, 234, 246, 0.8) 100%);
+            backdrop-filter: blur(12px);
+        }
+
+        .dark .banner-gradient {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
+            backdrop-filter: blur(12px);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .dark .glass-card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .dark ::webkit-scrollbar-thumb {
+            background: #334155;
+        }
+
+        /* Hide scrollbars for categories horizontal scroll */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-pastel-gradient text-slate-800 dark:text-slate-100 min-h-screen pb-28 pt-4 px-3 sm:px-6 max-w-md md:max-w-4xl lg:max-w-5xl mx-auto transition-colors duration-300">
+
+    <!-- TOP HEADER -->
+    <header class="flex items-center justify-between gap-2 mb-4 px-2">
+        <div class="flex items-center gap-3">
+            <div id="userAvatarHeader" class="w-12 h-12 rounded-full overflow-hidden p-0.5 bg-gradient-to-tr from-purple-400 to-pink-400 shadow-md cursor-pointer" onclick="switchTab('profile')">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200" alt="Avatar" class="w-full h-full object-cover rounded-full">
+            </div>
+            <div>
+                <span class="text-xs font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-300 block">UniShare Hub</span>
+                <h1 id="headerUserName" class="text-base font-bold leading-tight">Chào Sinh Viên! 👋</h1>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <!-- Dark / Light Mode Toggle -->
+            <button id="themeToggleBtn" onclick="toggleTheme()" class="w-11 h-11 rounded-full glass-card flex items-center justify-center text-slate-700 dark:text-amber-300 shadow-sm hover:scale-105 transition-transform">
+                <i class="fa-solid fa-moon text-lg dark:hidden"></i>
+                <i class="fa-solid fa-sun text-lg hidden dark:block"></i>
+            </button>
+            
+            <!-- Notification / Action -->
+            <button onclick="switchTab('orders')" class="w-11 h-11 rounded-full glass-card flex items-center justify-center text-slate-700 dark:text-slate-200 shadow-sm relative hover:scale-105 transition-transform">
+                <i class="fa-solid fa-bag-shopping text-lg"></i>
+                <span id="orderBadge" class="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN APP CONTAINER -->
+    <main id="appContent">
+
+        <!-- ==================== TAB 1: TRANG CHỦ (HOME) ==================== -->
+        <section id="tab-home" class="tab-page space-y-5">
+
+            <!-- SEARCH BAR (Pill Shape) -->
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 text-base"></i>
+                <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Tìm nồi cơm, xe máy, tai nghe, sách cũ..." 
+                    class="w-full pl-12 pr-12 py-3.5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-full shadow-sm border border-slate-200/60 dark:border-slate-700/60 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 dark:focus:ring-purple-500 transition-all">
+                <button onclick="clearSearch()" id="clearSearchBtn" class="hidden absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i class="fa-solid fa-circle-xmark"></i>
+                </button>
+            </div>
+
+            <!-- FEATURED BANNER (Inspired by reference image layout) -->
+            <div class="banner-gradient rounded-4xl p-5 md:p-6 shadow-lg border border-white/50 dark:border-slate-700/50 relative overflow-hidden">
+                <div class="flex flex-col sm:flex-row items-center gap-5 relative z-10">
+                    <div class="w-full sm:w-2/5 aspect-[4/3] sm:aspect-square rounded-3xl overflow-hidden shadow-md flex-shrink-0 relative group">
+                        <img id="bannerImg" src="https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=600" alt="Featured Item" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500">
+                        <span class="absolute top-3 left-3 bg-purple-600/90 text-white text-[11px] font-bold px-3 py-1 rounded-full backdrop-blur-md">🔥 NỔI BẬT</span>
+                    </div>
+                    <div class="w-full sm:w-3/5 flex flex-col justify-between space-y-3">
+                        <div>
+                            <span class="text-xs font-extrabold uppercase tracking-widest text-purple-600 dark:text-purple-300">ĐANG DẪN LỐI SINH VIÊN</span>
+                            <h2 id="bannerTitle" class="text-xl sm:text-2xl font-extrabold leading-snug mt-1 text-slate-900 dark:text-white">Nồi Cơm Điện Sharp 1.8L Cũ Gần KTX</h2>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 line-clamp-2">Cho thuê theo tuần hoặc bán lại cực hời. Đầy đủ xửng hấp, phụ kiện còn nguyên mới 95%.</p>
+                        </div>
+                        
+                        <div class="flex items-center justify-between pt-2">
+                            <div>
+                                <span class="text-xs text-slate-500 dark:text-slate-400 block">Giá thuê chỉ từ</span>
+                                <span id="bannerPrice" class="text-lg font-black text-purple-700 dark:text-purple-300">15.000đ<span class="text-xs font-normal">/ngày</span></span>
+                            </div>
+                            <button onclick="openProductModal(1)" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm rounded-full shadow-lg shadow-purple-500/30 transition-all hover:scale-105 active:scale-95">
+                                Xem Chi Tiết <i class="fa-solid fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TYPE FILTER TABS (Tất cả / Cho thuê / Bán đứt) -->
+            <div class="flex items-center gap-2 bg-slate-200/50 dark:bg-slate-800/50 p-1.5 rounded-full backdrop-blur-md">
+                <button onclick="setListingType('all')" id="btnTypeAll" class="type-filter-btn flex-1 py-2 rounded-full text-xs font-bold transition-all bg-white dark:bg-slate-700 text-purple-700 dark:text-purple-300 shadow-sm">
+                    Tất Cả
+                </button>
+                <button onclick="setListingType('rent')" id="btnTypeRent" class="type-filter-btn flex-1 py-2 rounded-full text-xs font-bold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900">
+                    <i class="fa-solid fa-clock-rotate-left mr-1"></i>Cho Thuê
+                </button>
+                <button onclick="setListingType('sell')" id="btnTypeSell" class="type-filter-btn flex-1 py-2 rounded-full text-xs font-bold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900">
+                    <i class="fa-solid fa-tag mr-1"></i>Đăng Bán
+                </button>
+            </div>
+
+            <!-- CATEGORY SCROLLBAR -->
+            <div>
+                <div class="flex items-center justify-between mb-2 px-1">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Danh Mục Đồ Dùng</h3>
+                    <span id="activeCategoryText" class="text-xs font-semibold text-purple-600 dark:text-purple-400">Tất cả</span>
+                </div>
+                <div class="flex gap-3 overflow-x-auto no-scrollbar pb-2 pt-1" id="categoryContainer">
+                    <!-- Categories rendered via JS -->
+                </div>
+            </div>
+
+            <!-- PRODUCTS LIST GRID -->
+            <div>
+                <div class="flex items-center justify-between mb-3 px-1">
+                    <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">Danh Sách Món Đồ (<span id="productCount">0</span>)</h3>
+                    <select id="sortSelect" onchange="applyFilters()" class="text-xs bg-transparent font-semibold text-slate-600 dark:text-slate-300 focus:outline-none border-b border-slate-300 dark:border-slate-700 pb-0.5">
+                        <option value="newest" class="dark:bg-slate-800">Mới nhất</option>
+                        <option value="price-asc" class="dark:bg-slate-800">Giá: Thấp đến Cao</option>
+                        <option value="price-desc" class="dark:bg-slate-800">Giá: Cao đến Thấp</option>
+                    </select>
+                </div>
+
+                <div id="productsGrid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+                    <!-- Products rendered dynamically -->
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="hidden text-center py-12 glass-card rounded-3xl">
+                    <i class="fa-solid fa-box-open text-4xl text-slate-300 dark:text-slate-600 mb-3"></i>
+                    <p class="text-sm font-semibold text-slate-500 dark:text-slate-400">Không tìm thấy món đồ phù hợp!</p>
+                    <button onclick="resetFilters()" class="mt-3 px-4 py-2 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs font-bold rounded-full">Đặt lại bộ lọc</button>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ==================== TAB 2: ĐĂNG TIN (POST ITEM) ==================== -->
+        <section id="tab-post" class="tab-page hidden space-y-4">
+            <div class="glass-card rounded-4xl p-5 sm:p-7 shadow-lg">
+                <div class="flex items-center gap-3 mb-5 border-b border-slate-200/60 dark:border-slate-700/60 pb-3">
+                    <div class="w-10 h-10 rounded-2xl bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-300 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-plus text-lg"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold">Đăng Món Đồ Của Tôi</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Chia sẻ hoặc sang nhượng đồ dùng cho sinh viên khác</p>
+                    </div>
+                </div>
+
+                <form id="postItemForm" onsubmit="handlePostItem(event)" class="space-y-4">
+                    <!-- Loại hình (Thuê / Bán) -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-2">Hình Thức Đăng *</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="postType" value="rent" checked onchange="togglePriceUnit()" class="peer hidden">
+                                <div class="p-3 text-center rounded-2xl border-2 border-slate-200 dark:border-slate-700 peer-checked:border-purple-600 peer-checked:bg-purple-50 dark:peer-checked:bg-purple-950/40 font-bold text-xs transition-all flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-clock-rotate-left text-purple-600"></i> Cho Thuê Theo Ngày
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="postType" value="sell" onchange="togglePriceUnit()" class="peer hidden">
+                                <div class="p-3 text-center rounded-2xl border-2 border-slate-200 dark:border-slate-700 peer-checked:border-purple-600 peer-checked:bg-purple-50 dark:peer-checked:bg-purple-950/40 font-bold text-xs transition-all flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-tag text-purple-600"></i> Đăng Bán Đứt
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Tên món đồ -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">Tên Sản Phẩm / Đồ Dùng *</label>
+                        <input type="text" id="postTitle" required placeholder="Ví dụ: Quạt đứng Senko, Giáo trình C++, Xe Wave..." 
+                            class="w-full px-4 py-3 bg-white/80 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+
+                    <!-- Danh mục & Tình trạng -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">Danh Mục *</label>
+                            <select id="postCategory" required class="w-full px-4 py-3 bg-white/80 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <option value="Đồ điện tử">⚡ Đồ điện tử</option>
+                                <option value="Gia dụng">🏠 Gia dụng phòng trọ</option>
+                                <option value="Sách & Giáo trình">📚 Sách & Giáo trình</option>
+                                <option value="Xe cộ">🛵 Xe cộ & Di chuyển</option>
+                                <option value="Đồ học tập">✏️ Đồ dùng học tập</option>
+                                <option value="Khác">🎈 Khác</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">Tình Trạng Món Đồ *</label>
+                            <select id="postCondition" required class="w-full px-4 py-3 bg-white/80 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <option value="Mới 99%">✨ Mới 99% (Như mới)</option>
+                                <option value="Mới 90%">👍 Mới 90% (Dùng tốt)</option>
+                                <option value="Mới 80%">👌 Mới 80% (Còn tốt)</option>
+                                <option value="Đã qua sử dụng">⏳ Cũ theo thời gian</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Giá bán / Giá thuê -->
+                    <div>
+                        <label id="priceLabel" class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">Giá Cho Thuê (VNĐ / ngày) *</label>
+                        <div class="relative">
+                            <input type="number" id="postPrice" required min="1000" step="1000" placeholder="15000" 
+                                class="w-full pl-4 pr-16 py-3 bg-white/80 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">VNĐ</span>
+                        </div>
+                    </div>
+
+                    <!-- URL Hình ảnh -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">Link Ảnh Sản Phẩm (Hoặc chọn ảnh mẫu) *</label>
+                        <input type="url" id="postImage" required placeholder="https://..." 
+                            class="w-full px-4 py-3 bg-white/80 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 mb-2">
+                        
+                        <!-- Quick Sample Images Select -->
+                        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                            <span class="text-[11px] text-slate-400 font-semibold whitespace-nowrap">Chọn ảnh nhanh:</span>
+                            <button type="button" onclick="setPostSampleImg('https://images.unsplash.com/photo-1544816155-12df9643f363?w=500')" class="text-[10px] px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-purple-100">Nồi cơm</button>
+                            <button type="button" onclick="setPostSampleImg('https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500')" class="text-[10px] px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-purple-100">Tai nghe</button>
+                            <button type="button" onclick="setPostSampleImg('https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=500')" class="text-[10px] px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-purple-100">Máy ảnh</button>
+                            <button type="button" onclick="setPostSampleImg('https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?w=500')" class="text-[10px] px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-purple-100">Sách cũ</button>
+                        </div>
+                    </div>
+
+                    <!-- Mô tả chi tiết -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">Mô Tả Sản Phẩm & Địa Chỉ Giao Dịch *</label>
+                        <textarea id="postDesc" rows="3" required placeholder="Ghi chú khu vực KTX, tình trạng hoạt động, phụ kiện đi kèm..." 
+                            class="w-full px-4 py-3 bg-white/80 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                    </div>
+
+                    <!-- Số điện thoại / Zalo -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">Số Điện Thoại / Zalo Liên Hệ *</label>
+                        <input type="tel" id="postPhone" required placeholder="0987654321" 
+                            class="w-full px-4 py-3 bg-white/80 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+
+                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-purple-500/30 transition-all hover:scale-[1.01] active:scale-[0.99] mt-2">
+                        <i class="fa-solid fa-paper-plane mr-2"></i> ĐĂNG MÓN ĐỒ NGAY
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 3: ĐƠN HÀNG (ORDERS) ==================== -->
+        <section id="tab-orders" class="tab-page hidden space-y-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-extrabold">Quản Lý Đơn Hàng</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Đơn thuê và đơn mua đồ dùng của bạn</p>
+                </div>
+            </div>
+
+            <!-- Tabs Thuê / Mua -->
+            <div class="flex border-b border-slate-200/80 dark:border-slate-700/80">
+                <button onclick="switchOrderSubTab('rent')" id="orderSubTabRent" class="px-5 py-2.5 font-bold text-xs border-b-2 border-purple-600 text-purple-600 dark:text-purple-400 transition-all">
+                    <i class="fa-solid fa-clock-rotate-left mr-1"></i> Đơn Thuê (<span id="rentOrderCount">0</span>)
+                </button>
+                <button onclick="switchOrderSubTab('buy')" id="orderSubTabBuy" class="px-5 py-2.5 font-bold text-xs border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 transition-all">
+                    <i class="fa-solid fa-bag-shopping mr-1"></i> Đơn Mua (<span id="buyOrderCount">0</span>)
+                </button>
+            </div>
+
+            <div id="ordersListContainer" class="space-y-3">
+                <!-- Orders rendered dynamically via JS -->
+            </div>
+        </section>
+
+        <!-- ==================== TAB 4: TÀI KHOẢN (PROFILE) ==================== -->
+        <section id="tab-profile" class="tab-page hidden space-y-4">
+            <!-- USER CARD -->
+            <div class="glass-card rounded-4xl p-6 text-center relative overflow-hidden shadow-lg">
+                <div class="w-20 h-20 rounded-full overflow-hidden p-1 bg-gradient-to-tr from-purple-500 to-pink-500 shadow-lg mx-auto mb-3">
+                    <img id="profileAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200" class="w-full h-full object-cover rounded-full">
+                </div>
+                <h2 id="profileName" class="text-lg font-extrabold">Nguyễn Văn A</h2>
+                <p id="profileUniversity" class="text-xs text-purple-600 dark:text-purple-300 font-semibold mb-2">Đại Học Bách Khoa - K65</p>
+                
+                <div class="inline-flex items-center gap-2 px-3 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-full text-xs font-bold mb-4">
+                    <i class="fa-solid fa-wallet"></i> Ví UniPay: <span id="profileWallet">500.000 VNĐ</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 text-left">
+                    <div class="p-3 bg-white/50 dark:bg-slate-800/50 rounded-2xl">
+                        <span class="text-[10px] text-slate-400 uppercase font-bold block">SĐT Zalo</span>
+                        <span id="profilePhone" class="text-xs font-bold">0987 654 321</span>
+                    </div>
+                    <div class="p-3 bg-white/50 dark:bg-slate-800/50 rounded-2xl">
+                        <span class="text-[10px] text-slate-400 uppercase font-bold block">Đồ Đã Đăng</span>
+                        <span id="profilePostedCount" class="text-xs font-bold text-purple-600 dark:text-purple-400">2 Món</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MY POSTED ITEMS LIST -->
+            <div class="space-y-3">
+                <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">Đồ Dùng Tôi Đang Đăng</h3>
+                <div id="myPostedItemsList" class="space-y-3">
+                    <!-- My posts rendered via JS -->
+                </div>
+            </div>
+
+            <!-- ACCOUNT ACTIONS -->
+            <div class="space-y-2 pt-2">
+                <button onclick="openAuthModal()" class="w-full py-3 px-4 glass-card rounded-2xl text-left text-xs font-bold flex items-center justify-between hover:bg-purple-50 dark:hover:bg-slate-800">
+                    <span><i class="fa-solid fa-user-gear text-purple-500 mr-2"></i> Cập Nhật Thông Tin Sinh Viên</span>
+                    <i class="fa-solid fa-chevron-right text-slate-400"></i>
+                </button>
+                <button onclick="resetAllData()" class="w-full py-3 px-4 glass-card rounded-2xl text-left text-xs font-bold text-rose-500 flex items-center justify-between hover:bg-rose-50 dark:hover:bg-rose-950/30">
+                    <span><i class="fa-solid fa-rotate-left mr-2"></i> Khôi Phục Dữ Liệu Mẫu</span>
+                    <i class="fa-solid fa-chevron-right text-slate-400"></i>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ==================== BOTTOM FLOATING NAV BAR (Pill Shape) ==================== -->
+    <nav class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-md bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/60 dark:border-slate-800/80 p-2 rounded-full shadow-2xl z-40 flex items-center justify-around">
+        <button onclick="switchTab('home')" id="nav-home" class="nav-btn flex flex-col items-center justify-center w-14 h-12 rounded-full text-purple-600 dark:text-purple-400 font-bold transition-all">
+            <i class="fa-solid fa-house text-lg"></i>
+            <span class="text-[10px] mt-0.5">Trang chủ</span>
+        </button>
+        
+        <button onclick="switchTab('post')" id="nav-post" class="nav-btn flex flex-col items-center justify-center w-14 h-12 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all">
+            <i class="fa-solid fa-circle-plus text-xl"></i>
+            <span class="text-[10px] mt-0.5">Đăng tin</span>
+        </button>
+
+        <button onclick="switchTab('orders')" id="nav-orders" class="nav-btn flex flex-col items-center justify-center w-14 h-12 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all relative">
+            <i class="fa-solid fa-receipt text-lg"></i>
+            <span class="text-[10px] mt-0.5">Đơn hàng</span>
+        </button>
+
+        <button onclick="switchTab('profile')" id="nav-profile" class="nav-btn flex flex-col items-center justify-center w-14 h-12 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all">
+            <i class="fa-solid fa-user text-lg"></i>
+            <span class="text-[10px] mt-0.5">Tài khoản</span>
+        </button>
+    </nav>
+
+    <!-- ==================== MODAL CHI TIẾT SẢN PHẨM ==================== -->
+    <div id="productModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden transition-opacity">
+        <div class="bg-white dark:bg-slate-900 w-full sm:max-w-lg rounded-t-4xl sm:rounded-4xl max-h-[90vh] overflow-y-auto p-5 sm:p-6 shadow-2xl border border-white/20 relative animate-slide-up">
+            <button onclick="closeProductModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center z-10 hover:bg-slate-200">
+                <i class="fa-solid fa-xmark text-base"></i>
+            </button>
+
+            <div id="productModalContent">
+                <!-- Content inserted dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL TÀI KHOẢN (AUTH / PROFILE EDIT) ==================== -->
+    <div id="authModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-4xl p-6 shadow-2xl relative">
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="text-base font-bold mb-4 text-center">Cập Nhật Hồ Sơ Sinh Viên</h3>
+            <form onsubmit="handleSaveProfile(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">Họ và Tên</label>
+                    <input type="text" id="editName" required class="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">Trường Đại Học / Khóa</label>
+                    <input type="text" id="editUni" required class="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">Số Điện Thoại Zalo</label>
+                    <input type="tel" id="editPhone" required class="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">URL Avatar</label>
+                    <input type="url" id="editAvatar" required class="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <button type="submit" class="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-2xl shadow-md transition-all mt-2">
+                    Lưu Thay Đổi
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST NOTIFICATION ==================== -->
+    <div id="toast" class="fixed top-5 right-1/2 translate-x-1/2 sm:translate-x-0 sm:right-5 bg-slate-900/90 text-white px-5 py-3 rounded-full shadow-2xl text-xs font-bold z-50 flex items-center gap-2 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+        <span id="toastMsg">Thành công!</span>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // ================= MOCK DATA KHỞI TẠO =================
+        const INITIAL_PRODUCTS = [
+            {
+                id: 1,
+                title: "Nồi Cơm Điện Sharp 1.8L Cũ Gần KTX",
+                category: "Gia dụng",
+                type: "rent", // 'rent' hoặc 'sell'
+                price: 15000, // VNĐ/ngày nếu rent, VNĐ nếu sell
+                condition: "Mới 95%",
+                image: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=600",
+                description: "Nồi cơm Sharp dung tích 1.8L nấu siêu nhanh cho 3-4 người ăn. Đầy đủ lòng nồi chống dính, dây nguồn, xửng hấp. Nhận đồ trực tiếp tại KTX Khu B.",
+                sellerName: "Lê Văn Nam",
+                phone: "0912 345 678",
+                postedDate: "2026-10-15"
+            },
+            {
+                id: 2,
+                title: "Tai Nghe Sony WH-CH520 Pin 50H",
+                category: "Đồ điện tử",
+                type: "sell",
+                price: 650000,
+                condition: "Mới 99%",
+                image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=600",
+                description: "Tai nghe Bluetooth chính hãng Sony màu Be rất xinh, dùng học tiếng Anh & nghe nhạc siêu mượt. Pin cực trâu 50 tiếng. Còn nguyên hộp.",
+                sellerName: "Nguyễn Thảo Nhi",
+                phone: "0988 776 655",
+                postedDate: "2026-10-17"
+            },
+            {
+                id: 3,
+                title: "Xe Máy Wave Alpha 110cc Sinh Viên",
+                category: "Xe cộ",
+                type: "rent",
+                price: 60000,
+                condition: "Mới 90%",
+                image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&q=80&w=600",
+                description: "Xe máy Wave chạy rất mượt, tiết kiệm xăng. Thích hợp cho sinh viên thuê đi phượt, chạy Grab hoặc đi thực tập theo tuần/tháng. Đã có mũ bảo hiểm.",
+                sellerName: "Trần Hoàng Long",
+                phone: "0905 123 999",
+                postedDate: "2026-10-18"
+            },
+            {
+                id: 4,
+                title: "Trọn Bộ Giáo Trình C++ & Cấu Trúc Dữ Liệu",
+                category: "Sách & Giáo trình",
+                type: "sell",
+                price: 80000,
+                condition: "Mới 80%",
+                image: "https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?auto=format&fit=crop&q=80&w=600",
+                description: "Sách bài tập C++ nâng cao kèm chú thích chi tiết đề thi các năm trước. Tặng kèm ghi chú ôn thi học kỳ điểm A+.",
+                sellerName: "Nguyễn Văn A",
+                phone: "0987 654 321",
+                postedDate: "2026-10-18"
+            },
+            {
+                id: 5,
+                title: "Quạt Đứng Senko 5 Cánh Mới Mua",
+                category: "Gia dụng",
+                type: "rent",
+                price: 10000,
+                condition: "Mới 99%",
+                image: "https://images.unsplash.com/photo-1618941723628-e0756458b432?auto=format&fit=crop&q=80&w=600",
+                description: "Quạt mát lạnh, chạy êm ru không tiếng ồn. Thích hợp cho bạn nào ở trọ ngắn hạn mùa nóng.",
+                sellerName: "Đặng Thu Hà",
+                phone: "0934 112 233",
+                postedDate: "2026-10-19"
+            },
+            {
+                id: 6,
+                title: "Bàn Học Chân Thấp Gấp Gọn Bằng Gỗ",
+                category: "Đồ học tập",
+                type: "sell",
+                price: 55000,
+                condition: "Mới 90%",
+                image: "https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?auto=format&fit=crop&q=80&w=600",
+                description: "Bàn học gấp gọn có khe để iPad/điện thoại và chỗ để ly nước. Gỗ ép chống nước siêu chắc chắn.",
+                sellerName: "Nguyễn Văn A",
+                phone: "0987 654 321",
+                postedDate: "2026-10-19"
+            }
+        ];
+
+        const CATEGORIES = [
+            { name: "Tất cả", icon: "fa-border-all" },
+            { name: "Đồ điện tử", icon: "fa-bolt" },
+            { name: "Gia dụng", icon: "fa-house-user" },
+            { name: "Sách & Giáo trình", icon: "fa-book" },
+            { name: "Xe cộ", icon: "fa-motorcycle" },
+            { name: "Đồ học tập", icon: "fa-pen-ruler" }
+        ];
+
+        const DEFAULT_PROFILE = {
+            name: "Nguyễn Văn A",
+            university: "Đại Học Bách Khoa - K65",
+            phone: "0987 654 321",
+            wallet: 500000,
+            avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200"
+        };
+
+        // ================= APP STATE =================
+        let products = [];
+        let orders = [];
+        let userProfile = {};
+        let currentCategory = "Tất cả";
+        let currentType = "all"; // 'all', 'rent', 'sell'
+        let currentOrderSubTab = "rent"; // 'rent', 'buy'
+
+        // ================= INITIALIZATION =================
+        window.addEventListener('DOMContentLoaded', () => {
+            loadLocalStorageData();
+            renderCategories();
+            applyFilters();
+            updateProfileUI();
+            updateOrderBadge();
+        });
+
+        function loadLocalStorageData() {
+            // Products
+            const storedProducts = localStorage.getItem('unishare_products');
+            products = storedProducts ? JSON.parse(storedProducts) : INITIAL_PRODUCTS;
+            if (!storedProducts) localStorage.setItem('unishare_products', JSON.stringify(products));
+
+            // Orders
+            const storedOrders = localStorage.getItem('unishare_orders');
+            orders = storedOrders ? JSON.parse(storedOrders) : [
+                {
+                    id: 'ORD-101',
+                    productId: 1,
+                    productTitle: "Nồi Cơm Điện Sharp 1.8L Cũ Gần KTX",
+                    productImg: "https://images.unsplash.com/photo-1544816155-12df9643f363?w=200",
+                    type: 'rent',
+                    rentalDays: 3,
+                    totalPrice: 45000,
+                    status: 'Đang thuê', // 'Đang chờ', 'Đang thuê', 'Đã hoàn thành'
+                    date: '2026-10-18'
+                }
+            ];
+            if (!storedOrders) localStorage.setItem('unishare_orders', JSON.stringify(orders));
+
+            // Profile
+            const storedProfile = localStorage.getItem('unishare_profile');
+            userProfile = storedProfile ? JSON.parse(storedProfile) : DEFAULT_PROFILE;
+            if (!storedProfile) localStorage.setItem('unishare_profile', JSON.stringify(userProfile));
+        }
+
+        function saveProducts() {
+            localStorage.setItem('unishare_products', JSON.stringify(products));
+        }
+
+        function saveOrders() {
+            localStorage.setItem('unishare_orders', JSON.stringify(orders));
+            updateOrderBadge();
+        }
+
+        function saveProfile() {
+            localStorage.setItem('unishare_profile', JSON.stringify(userProfile));
+            updateProfileUI();
+        }
+
+        // ================= RENDER FUNCTIONS =================
+        function renderCategories() {
+            const container = document.getElementById('categoryContainer');
+            container.innerHTML = CATEGORIES.map(cat => {
+                const isActive = cat.name === currentCategory;
+                return `
+                    <button onclick="setCategory('${cat.name}')" 
+                        class="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all duration-200 ${
+                            isActive 
+                            ? 'bg-purple-600 text-white shadow-md shadow-purple-500/20 scale-105' 
+                            : 'glass-card text-slate-700 dark:text-slate-300 hover:bg-white/90'
+                        }">
+                        <i class="fa-solid ${cat.icon}"></i>
+                        <span>${cat.name}</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function applyFilters() {
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+            const sortBy = document.getElementById('sortSelect').value;
+
+            let filtered = products.filter(p => {
+                const matchCategory = currentCategory === "Tất cả" || p.category === currentCategory;
+                const matchType = currentType === "all" || p.type === currentType;
+                const matchSearch = p.title.toLowerCase().includes(searchQuery) || p.description.toLowerCase().includes(searchQuery);
+                return matchCategory && matchType && matchSearch;
+            });
+
+            // Sorting
+            if (sortBy === 'price-asc') filtered.sort((a, b) => a.price - b.price);
+            else if (sortBy === 'price-desc') filtered.sort((a, b) => b.price - a.price);
+            else filtered.sort((a, b) => new Date(b.postedDate) - new Date(a.postedDate));
+
+            renderProducts(filtered);
+        }
+
+        function renderProducts(items) {
+            const grid = document.getElementById('productsGrid');
+            const emptyState = document.getElementById('emptyState');
+            document.getElementById('productCount').textContent = items.length;
+
+            if (items.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            grid.innerHTML = items.map(p => `
+                <div onclick="openProductModal(${p.id})" class="glass-card rounded-3xl p-3 flex flex-col justify-between cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                    <div>
+                        <div class="relative aspect-square rounded-2xl overflow-hidden mb-2.5 bg-slate-100 dark:bg-slate-800">
+                            <img src="${p.image}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://placehold.co/400x400/e8dff5/8b5cf6?text=UniShare'">
+                            <span class="absolute top-2 left-2 ${p.type === 'rent' ? 'bg-purple-600' : 'bg-emerald-600'} text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full backdrop-blur-md shadow-sm">
+                                ${p.type === 'rent' ? 'CHO THUÊ' : 'ĐĂNG BÁN'}
+                            </span>
+                            <span class="absolute bottom-2 right-2 bg-slate-900/70 text-white text-[9px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md">
+                                ${p.condition}
+                            </span>
+                        </div>
+                        <span class="text-[10px] font-extrabold text-purple-600 dark:text-purple-400 uppercase tracking-wider block">${p.category}</span>
+                        <h4 class="text-xs font-bold leading-snug text-slate-800 dark:text-slate-100 line-clamp-2 mt-0.5">${p.title}</h4>
+                    </div>
+
+                    <div class="mt-3 pt-2 border-t border-slate-200/50 dark:border-slate-700/50 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-slate-400 block">Giá</span>
+                            <span class="text-xs font-extrabold text-purple-700 dark:text-purple-300">
+                                ${p.price.toLocaleString('vi-VN')}đ${p.type === 'rent' ? '<span class="text-[9px] font-normal text-slate-400">/ngày</span>' : ''}
+                            </span>
+                        </div>
+                        <div class="w-7 h-7 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-600 dark:text-purple-300 flex items-center justify-center text-xs group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ================= PRODUCT MODAL ACTIONS =================
+        function openProductModal(id) {
+            const product = products.find(p => p.id === id);
+            if (!product) return;
+
+            const modalContent = document.getElementById('productModalContent');
+            const isRent = product.type === 'rent';
+
+            modalContent.innerHTML = `
+                <div class="aspect-[4/3] rounded-3xl overflow-hidden mb-4 relative shadow-md">
+                    <img src="${product.image}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400/e8dff5/8b5cf6?text=UniShare'">
+                    <span class="absolute top-3 left-3 ${isRent ? 'bg-purple-600' : 'bg-emerald-600'} text-white text-xs font-bold px-3 py-1 rounded-full">
+                        ${isRent ? 'CHO THUÊ N ngắn hạn' : 'SANG NHƯỢNG / BÁN'}
+                    </span>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">${product.category} • ${product.condition}</span>
+                        <span class="text-xs text-slate-400">${product.postedDate}</span>
+                    </div>
+
+                    <h3 class="text-lg font-extrabold text-slate-900 dark:text-white leading-snug">${product.title}</h3>
+
+                    <div class="p-3 bg-purple-50 dark:bg-slate-800/80 rounded-2xl flex items-center justify-between">
+                        <div>
+                            <span class="text-xs text-slate-500 dark:text-slate-400 block">${isRent ? 'Chi phí thuê' : 'Giá bán thanh lý'}</span>
+                            <span class="text-xl font-black text-purple-700 dark:text-purple-300">
+                                ${product.price.toLocaleString('vi-VN')} VNĐ ${isRent ? '<span class="text-xs font-normal text-slate-500">/ 1 ngày</span>' : ''}
+                            </span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] text-slate-400 block">Người đăng</span>
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-200"><i class="fa-solid fa-circle-user text-purple-500 mr-1"></i>${product.sellerName}</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Mô Tả Chi Tiết</h4>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-800/40 p-3 rounded-2xl">${product.description}</p>
+                    </div>
+
+                    ${isRent ? `
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">Chọn số ngày muốn thuê:</label>
+                            <div class="flex items-center gap-3">
+                                <button onclick="adjustRentalDays(-1, ${product.price})" class="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 font-bold">-</button>
+                                <span id="modalRentalDays" class="text-sm font-extrabold w-8 text-center">1</span>
+                                <button onclick="adjustRentalDays(1, ${product.price})" class="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 font-bold">+</button>
+                                <span class="text-xs text-slate-500 ml-auto">Tổng: <b id="modalTotalPrice" class="text-purple-600 dark:text-purple-400 text-sm">${product.price.toLocaleString('vi-VN')} VNĐ</b></span>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <!-- ACTION BUTTONS -->
+                    <div class="pt-2 grid grid-cols-2 gap-3">
+                        <a href="https://zalo.me/${product.phone.replace(/\s+/g, '')}" target="_blank" class="py-3 px-4 bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs rounded-2xl flex items-center justify-center gap-2 shadow-md">
+                            <i class="fa-solid fa-comment"></i> Chat Zalo (${product.phone})
+                        </a>
+                        <button onclick="confirmOrder(${product.id})" class="py-3 px-4 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-2xl shadow-md shadow-purple-500/30 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-bag-shopping"></i> ${isRent ? 'Đặt Thuê Ngay' : 'Xác Nhận Mua'}
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('productModal').classList.remove('hidden');
+        }
+
+        function closeProductModal() {
+            document.getElementById('productModal').classList.add('hidden');
+        }
+
+        let currentModalDays = 1;
+        function adjustRentalDays(delta, pricePerDay) {
+            currentModalDays = Math.max(1, currentModalDays + delta);
+            const daysEl = document.getElementById('modalRentalDays');
+            const totalEl = document.getElementById('modalTotalPrice');
+            if (daysEl) daysEl.textContent = currentModalDays;
+            if (totalEl) totalEl.textContent = (currentModalDays * pricePerDay).toLocaleString('vi-VN') + ' VNĐ';
+        }
+
+        function confirmOrder(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            const isRent = product.type === 'rent';
+            const total = isRent ? product.price * currentModalDays : product.price;
+
+            const newOrder = {
+                id: 'ORD-' + Math.floor(100 + Math.random() * 900),
+                productId: product.id,
+                productTitle: product.title,
+                productImg: product.image,
+                type: product.type,
+                rentalDays: isRent ? currentModalDays : 1,
+                totalPrice: total,
+                status: 'Đang chờ duyệt',
+                date: new Date().toISOString().split('T')[0]
+            };
+
+            orders.unshift(newOrder);
+            saveOrders();
+            closeProductModal();
+            showToast(isRent ? 'Đã gửi yêu cầu thuê thành công!' : 'Đã xác nhận mua món đồ!');
+            switchTab('orders');
+        }
+
+        // ================= POST ITEM HANDLER =================
+        function handlePostItem(e) {
+            e.preventDefault();
+
+            const postType = document.querySelector('input[name="postType"]:checked').value;
+            const title = document.getElementById('postTitle').value;
+            const category = document.getElementById('postCategory').value;
+            const condition = document.getElementById('postCondition').value;
+            const price = parseInt(document.getElementById('postPrice').value);
+            const image = document.getElementById('postImage').value;
+            const description = document.getElementById('postDesc').value;
+            const phone = document.getElementById('postPhone').value;
+
+            const newItem = {
+                id: Date.now(),
+                title,
+                category,
+                type: postType,
+                price,
+                condition,
+                image,
+                description,
+                sellerName: userProfile.name,
+                phone,
+                postedDate: new Date().toISOString().split('T')[0]
+            };
+
+            products.unshift(newItem);
+            saveProducts();
+            document.getElementById('postItemForm').reset();
+            showToast('Đăng món đồ thành công!');
+            switchTab('home');
+            applyFilters();
+        }
+
+        function togglePriceUnit() {
+            const type = document.querySelector('input[name="postType"]:checked').value;
+            const label = document.getElementById('priceLabel');
+            label.textContent = type === 'rent' ? 'Giá Cho Thuê (VNĐ / ngày) *' : 'Giá Bán Thanh Lý (VNĐ) *';
+        }
+
+        function setPostSampleImg(url) {
+            document.getElementById('postImage').value = url;
+        }
+
+        // ================= ORDER MANAGEMENT =================
+        function switchOrderSubTab(type) {
+            currentOrderSubTab = type;
+            const rentBtn = document.getElementById('orderSubTabRent');
+            const buyBtn = document.getElementById('orderSubTabBuy');
+
+            if (type === 'rent') {
+                rentBtn.className = "px-5 py-2.5 font-bold text-xs border-b-2 border-purple-600 text-purple-600 dark:text-purple-400 transition-all";
+                buyBtn.className = "px-5 py-2.5 font-bold text-xs border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 transition-all";
+            } else {
+                buyBtn.className = "px-5 py-2.5 font-bold text-xs border-b-2 border-purple-600 text-purple-600 dark:text-purple-400 transition-all";
+                rentBtn.className = "px-5 py-2.5 font-bold text-xs border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 transition-all";
+            }
+            renderOrders();
+        }
+
+        function renderOrders() {
+            const container = document.getElementById('ordersListContainer');
+            const filteredOrders = orders.filter(o => o.type === currentOrderSubTab);
+
+            document.getElementById('rentOrderCount').textContent = orders.filter(o => o.type === 'rent').length;
+            document.getElementById('buyOrderCount').textContent = orders.filter(o => o.type === 'sell').length;
+
+            if (filteredOrders.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 glass-card rounded-3xl">
+                        <i class="fa-solid fa-receipt text-3xl text-slate-300 dark:text-slate-600 mb-2"></i>
+                        <p class="text-xs text-slate-500">Chưa có đơn hàng nào trong mục này</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filteredOrders.map(o => `
+                <div class="glass-card rounded-3xl p-4 flex gap-3 items-center justify-between">
+                    <img src="${o.productImg}" class="w-16 h-16 rounded-2xl object-cover bg-slate-100" onerror="this.src='https://placehold.co/200'">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-0.5">
+                            <span class="text-[10px] font-bold text-purple-600 dark:text-purple-400">${o.id}</span>
+                            <span class="text-[9px] px-2 py-0.5 rounded-full font-bold ${
+                                o.status === 'Đã hoàn thành' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+                            }">${o.status}</span>
+                        </div>
+                        <h4 class="text-xs font-bold truncate text-slate-800 dark:text-slate-100">${o.productTitle}</h4>
+                        <p class="text-[11px] text-slate-500 mt-0.5">
+                            ${o.type === 'rent' ? `Thuê ${o.rentalDays} ngày • ` : ''} <b>${o.totalPrice.toLocaleString('vi-VN')} VNĐ</b>
+                        </p>
+                    </div>
+                    <div>
+                        ${o.status !== 'Đã hoàn thành' ? `
+                            <button onclick="completeOrder('${o.id}')" class="px-3 py-1.5 bg-purple-100 dark:bg-purple-900/60 hover:bg-purple-600 hover:text-white text-purple-700 dark:text-purple-300 text-[11px] font-bold rounded-full transition-all">
+                                Trả Đồ / Xong
+                            </button>
+                        ` : '<i class="fa-solid fa-circle-check text-emerald-500 text-lg"></i>'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function completeOrder(orderId) {
+            const order = orders.find(o => o.id === orderId);
+            if (order) {
+                order.status = 'Đã hoàn thành';
+                saveOrders();
+                renderOrders();
+                showToast('Đã cập nhật trạng thái đơn hàng!');
+            }
+        }
+
+        function updateOrderBadge() {
+            const pendingCount = orders.filter(o => o.status !== 'Đã hoàn thành').length;
+            const badge = document.getElementById('orderBadge');
+            if (pendingCount > 0) {
+                badge.textContent = pendingCount;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        // ================= PROFILE & MY POSTS =================
+        function updateProfileUI() {
+            document.getElementById('headerUserName').textContent = `Chào ${userProfile.name.split(' ')[0]}! 👋`;
+            document.getElementById('userAvatarHeader').querySelector('img').src = userProfile.avatar;
+            document.getElementById('profileAvatar').src = userProfile.avatar;
+            document.getElementById('profileName').textContent = userProfile.name;
+            document.getElementById('profileUniversity').textContent = userProfile.university;
+            document.getElementById('profilePhone').textContent = userProfile.phone;
+            document.getElementById('profileWallet').textContent = userProfile.wallet.toLocaleString('vi-VN') + ' VNĐ';
+
+            renderMyPostedItems();
+        }
+
+        function renderMyPostedItems() {
+            const myItems = products.filter(p => p.sellerName === userProfile.name);
+            document.getElementById('profilePostedCount').textContent = `${myItems.length} Món`;
+
+            const container = document.getElementById('myPostedItemsList');
+            if (myItems.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 py-3 text-center glass-card rounded-2xl">Bạn chưa đăng món đồ nào.</p>`;
+                return;
+            }
+
+            container.innerHTML = myItems.map(item => `
+                <div class="glass-card rounded-2xl p-3 flex items-center justify-between">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <img src="${item.image}" class="w-12 h-12 rounded-xl object-cover" onerror="this.src='https://placehold.co/100'">
+                        <div class="min-w-0">
+                            <h4 class="text-xs font-bold truncate">${item.title}</h4>
+                            <span class="text-[10px] text-purple-600 font-semibold">${item.price.toLocaleString('vi-VN')} VNĐ</span>
+                        </div>
+                    </div>
+                    <button onclick="deleteMyItem(${item.id})" class="text-rose-500 hover:text-rose-700 text-xs p-2">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function deleteMyItem(id) {
+            products = products.filter(p => p.id !== id);
+            saveProducts();
+            applyFilters();
+            renderMyPostedItems();
+            showToast('Đã xóa món đồ!');
+        }
+
+        function openAuthModal() {
+            document.getElementById('editName').value = userProfile.name;
+            document.getElementById('editUni').value = userProfile.university;
+            document.getElementById('editPhone').value = userProfile.phone;
+            document.getElementById('editAvatar').value = userProfile.avatar;
+            document.getElementById('authModal').classList.remove('hidden');
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.add('hidden');
+        }
+
+        function handleSaveProfile(e) {
+            e.preventDefault();
+            userProfile.name = document.getElementById('editName').value;
+            userProfile.university = document.getElementById('editUni').value;
+            userProfile.phone = document.getElementById('editPhone').value;
+            userProfile.avatar = document.getElementById('editAvatar').value;
+
+            saveProfile();
+            closeAuthModal();
+            showToast('Đã cập nhật hồ sơ thành công!');
+        }
+
+        // ================= NAVIGATION & TAB SWITCHING =================
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-page').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+            // Update Nav Buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = "nav-btn flex flex-col items-center justify-center w-14 h-12 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all";
+            });
+
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if (activeBtn) {
+                activeBtn.className = "nav-btn flex flex-col items-center justify-center w-14 h-12 rounded-full text-purple-600 dark:text-purple-400 font-bold transition-all bg-purple-50 dark:bg-slate-800";
+            }
+
+            if (tabId === 'orders') renderOrders();
+            if (tabId === 'profile') renderMyPostedItems();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Filter Actions
+        function setCategory(cat) {
+            currentCategory = cat;
+            document.getElementById('activeCategoryText').textContent = cat;
+            renderCategories();
+            applyFilters();
+        }
+
+        function setListingType(type) {
+            currentType = type;
+            const btnAll = document.getElementById('btnTypeAll');
+            const btnRent = document.getElementById('btnTypeRent');
+            const btnSell = document.getElementById('btnTypeSell');
+
+            [btnAll, btnRent, btnSell].forEach(b => {
+                b.className = "type-filter-btn flex-1 py-2 rounded-full text-xs font-bold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900";
+            });
+
+            if (type === 'all') btnAll.className = "type-filter-btn flex-1 py-2 rounded-full text-xs font-bold transition-all bg-white dark:bg-slate-700 text-purple-700 dark:text-purple-300 shadow-sm";
+            if (type === 'rent') btnRent.className = "type-filter-btn flex-1 py-2 rounded-full text-xs font-bold transition-all bg-white dark:bg-slate-700 text-purple-700 dark:text-purple-300 shadow-sm";
+            if (type === 'sell') btnSell.className = "type-filter-btn flex-1 py-2 rounded-full text-xs font-bold transition-all bg-white dark:bg-slate-700 text-purple-700 dark:text-purple-300 shadow-sm";
+
+            applyFilters();
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value;
+            const clearBtn = document.getElementById('clearSearchBtn');
+            if (query.trim() !== '') clearBtn.classList.remove('hidden');
+            else clearBtn.classList.add('hidden');
+            applyFilters();
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('clearSearchBtn').classList.add('hidden');
+            applyFilters();
+        }
+
+        function resetFilters() {
+            currentCategory = "Tất cả";
+            currentType = "all";
+            document.getElementById('searchInput').value = '';
+            document.getElementById('sortSelect').value = 'newest';
+            renderCategories();
+            setListingType('all');
+        }
+
+        // Theme Toggle (Dark / Light)
+        function toggleTheme() {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                html.classList.add('light');
+            } else {
+                html.classList.remove('light');
+                html.classList.add('dark');
+            }
+        }
+
+        // Reset Data to Default
+        function resetAllData() {
+            if (confirm("Khôi phục toàn bộ dữ liệu danh sách sản phẩm và đơn hàng về mặc định?")) {
+                localStorage.clear();
+                loadLocalStorageData();
+                renderCategories();
+                applyFilters();
+                updateProfileUI();
+                showToast('Đã khôi phục dữ liệu mẫu!');
+            }
+        }
+
+        // Toast Helper
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = message;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
